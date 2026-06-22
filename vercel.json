@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/telegram", "destination": "/api/telegram.js" },
+    { "source": "/api/upi", "destination": "/api/upi.js" }
+  ]
+}

