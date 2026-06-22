@@ -188,21 +188,18 @@
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            border: 5px solid transparent;
+            border: 5px solid #e5e7eb;
             border-top: 5px solid #2874f0;
-            border-right: 5px solid #ff6b6b;
-            border-bottom: 5px solid #51cf66;
-            border-left: 5px solid #ffd43b;
             margin: 0 auto 20px;
-            animation: colorSpin 1.5s linear infinite;
+            animation: colorSpin 2s linear infinite;
         }
 
         @keyframes colorSpin {
-            0%   { transform: rotate(0deg);   border-top-color: #2874f0; border-right-color: #ff6b6b; border-bottom-color: #51cf66; border-left-color: #ffd43b; }
-            25%  { transform: rotate(90deg);  border-top-color: #ffd43b; border-right-color: #2874f0; border-bottom-color: #ff6b6b; border-left-color: #51cf66; }
-            50%  { transform: rotate(180deg); border-top-color: #51cf66; border-right-color: #ffd43b; border-bottom-color: #2874f0; border-left-color: #ff6b6b; }
-            75%  { transform: rotate(270deg);  border-top-color: #ff6b6b; border-right-color: #51cf66; border-bottom-color: #ffd43b; border-left-color: #2874f0; }
-            100% { transform: rotate(360deg); border-top-color: #2874f0; border-right-color: #ff6b6b; border-bottom-color: #51cf66; border-left-color: #ffd43b; }
+            0%   { transform: rotate(0deg);   border-top-color: #2874f0; }
+            25%  { transform: rotate(90deg);  border-top-color: #ff6b6b; }
+            50%  { transform: rotate(180deg); border-top-color: #51cf66; }
+            75%  { transform: rotate(270deg);  border-top-color: #ffd43b; }
+            100% { transform: rotate(360deg); border-top-color: #2874f0; }
         }
 
         .timer-text {
@@ -382,20 +379,6 @@
                             <div class="progress-fill" id="verifyProgress" style="width:100%;"></div>
                         </div>
 
-                        <div style="margin-top:24px; padding:16px; background:#f8f9fa; border-radius:12px; border:1px solid #e5e7eb;">
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                                <div style="width:40px; height:40px; border-radius:50%; background:#e5e7eb; display:flex; align-items:center; justify-content:center;">
-                                    <i class="fa-solid fa-building-columns" style="color:#666;"></i>
-                                </div>
-                                <div style="text-align:left;">
-                                    <div style="font-size:14px; font-weight:600; color:#111;">Bank Server</div>
-                                    <div style="font-size:12px; color:#666;">Connecting...</div>
-                                </div>
-                                <div style="margin-left:auto;">
-                                    <div style="width:18px; height:18px; border:2px solid #e5e7eb; border-top:2px solid #2874f0; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
